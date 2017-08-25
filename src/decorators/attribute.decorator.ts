@@ -1,9 +1,8 @@
 import * as dateFormat from 'date-fns/format';
 import * as dateParse from 'date-fns/parse';
 
-export function Attribute(config: any = {}) {
+export function Attribute(serializedName: string = null) {
   return function (target: any, propertyName: string) {
-
     let converter = function(dataType: any, value: any, forSerialisation = false): any {
       if (!forSerialisation) {
         if (dataType === Date) {
@@ -27,6 +26,7 @@ export function Attribute(config: any = {}) {
         hasDirtyAttributes: hasDirtyAttributes,
         oldValue: oldValue,
         newValue: newValue,
+        serializedName: serializedName,
         serialisationValue: converter(targetType, newValue, true)
       };
       Reflect.defineMetadata('Attribute', annotations, target);

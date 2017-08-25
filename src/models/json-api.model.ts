@@ -2,6 +2,7 @@ import { Headers } from '@angular/http';
 import find from 'lodash-es/find';
 import { Observable } from 'rxjs/Observable';
 import { JsonApiDatastore, ModelType } from '../services/json-api-datastore.service';
+import {isPropertyAssignment} from 'codelyzer/util/astQuery';
 
 export class JsonApiModel {
 
@@ -11,7 +12,9 @@ export class JsonApiModel {
   constructor(private _datastore: JsonApiDatastore, data?: any) {
     if (data) {
       this.id = data.id;
-      Object.assign(this, data.attributes);
+      if (data.attributes) {
+          Object.assign(this, data.attributes);
+      }
     }
   }
 

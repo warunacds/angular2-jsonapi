@@ -17,7 +17,7 @@ export function getAuthorData(relationship?: string, total?: number): any {
     'type': 'authors',
     'attributes': {
       'name': AUTHOR_NAME,
-      'date_of_birth': AUTHOR_BIRTH,
+      'dob': AUTHOR_BIRTH,
       'date_of_death': AUTHOR_DEATH,
       'created_at': AUTHOR_CREATED,
       'updated_at': AUTHOR_UPDATED

@@ -1,5 +1,6 @@
 import {TestBed} from '@angular/core/testing';
 import * as dateParse from 'date-fns/parse';
+import * as dateFormat from 'date-fns/format';
 import {Author} from '../../test/models/author.model';
 import {AUTHOR_BIRTH, AUTHOR_ID, AUTHOR_NAME, BOOK_TITLE, getAuthorData} from '../../test/fixtures/author.fixture';
 import {
@@ -267,13 +268,15 @@ describe('JsonApiDatastore', () => {
                 expect(c.request.method).toEqual(RequestMethod.Post);
                 let obj = c.request.json().data;
                 expect(obj.attributes.name).toEqual(AUTHOR_NAME);
+                expect(obj.attributes.dob).toEqual(dateFormat(dateParse(AUTHOR_BIRTH), 'YYYY-MM-DDTHH:mm:ss[Z]'));
                 expect(obj.id).toBeUndefined();
                 expect(obj.type).toBe('authors');
                 expect(obj.relationships).toBeUndefined();
 
             });
             let author = datastore.createRecord(Author, {
-                name: AUTHOR_NAME
+                name: AUTHOR_NAME,
+                date_of_birth: AUTHOR_BIRTH
             });
             author.save().subscribe();
         });
@@ -343,16 +346,22 @@ describe('JsonApiDatastore', () => {
                 expect(c.request.url).toEqual(BASE_URL + 'authors/1');
                 expect(c.request.method).toEqual(RequestMethod.Patch);
                 let obj = c.request.json().data;
-                expect(obj.attributes.name).toEqual(AUTHOR_NAME);
+                expect(obj.attributes.name).toEqual('Rowling');
+                expect(obj.attributes.dob).toEqual(dateFormat(dateParse('1965-07-31'), 'YYYY-MM-DDTHH:mm:ss[Z]'));
                 expect(obj.id).toBe(AUTHOR_ID);
                 expect(obj.type).toBe('authors');
                 expect(obj.relationships).toBeUndefined();
 
             });
             let author = new Author(datastore, {
-                name: AUTHOR_NAME,
-                id: AUTHOR_ID
+                id: AUTHOR_ID,
+                attributes: {
+                    date_of_birth: dateParse(AUTHOR_BIRTH),
+                    name: AUTHOR_NAME
+                }
             });
+            author.name = 'Rowling';
+            author.date_of_birth = dateParse('1965-07-31');
             author.save().subscribe();
         });
     });

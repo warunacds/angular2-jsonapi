@@ -14,7 +14,7 @@ export class Author extends JsonApiModel {
     @Attribute()
     name: string;
 
-    @Attribute()
+    @Attribute("dob")
     date_of_birth: Date;
 
     @Attribute()

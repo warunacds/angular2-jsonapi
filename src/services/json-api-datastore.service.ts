@@ -56,8 +56,10 @@ export class JsonApiDatastore {
         for (let propertyName in attributesMetadata) {
             if (attributesMetadata.hasOwnProperty(propertyName)) {
                 let metadata: any = attributesMetadata[propertyName];
+                console.log(metadata);
                 if (metadata.hasDirtyAttributes) {
-                    dirtyData[propertyName] = metadata.serialisationValue ? metadata.serialisationValue : metadata.newValue;
+                    let attributeName = metadata.serializedName != null ? metadata.serializedName : propertyName;
+                    dirtyData[attributeName] = metadata.serialisationValue ? metadata.serialisationValue : metadata.newValue;
                 }
             }
         }
@@ -164,7 +166,7 @@ export class JsonApiDatastore {
         let body: any = res.json();
         let models: T[] = [];
         body.data.forEach((data: any) => {
-            let model: T = new modelType(this, data);
+            let model: T = this.deserializeModel(modelType, data);
             this.addToStore(model);
             if (body.included) {
                 model.syncRelationships(data, body.included, 0);
@@ -180,13 +182,18 @@ export class JsonApiDatastore {
         }
     }
 
+    private deserializeModel<T extends JsonApiModel>(modelType: ModelType<T>, data: any) {
+        data.attributes = this.transformSerializedNamesToPropertyNames(modelType, data.attributes);
+        return new modelType(this, data);
+    }
+
     private extractRecordData<T extends JsonApiModel>(res: any, modelType: ModelType<T>, model?: T): T {
         let body: any = res.json();
         if (model) {
             model.id = body.data.id;
             Object.assign(model, body.data.attributes);
         }
-        model = model || new modelType(this, body.data);
+        model = model || this.deserializeModel(modelType, body.data);
         this.addToStore(model);
         if (body.included) {
             model.syncRelationships(body.data, body.included, 0);
@@ -289,5 +296,29 @@ export class JsonApiDatastore {
         }
         return model;
     };
+
+    private transformSerializedNamesToPropertyNames<T extends JsonApiModel>(modelType: ModelType<T>, attributes: any) {
+        let serializedNameToPropertyName = this.getAttributePropertyNames(modelType.prototype);
+        Object.keys(serializedNameToPropertyName).forEach(serializedName => {
+            if (attributes[serializedName]) {
+                attributes[serializedNameToPropertyName[serializedName]] = attributes[serializedName];
+                delete attributes[serializedName];
+            }
+        });
+        return attributes;
+    }
+
+    private getAttributePropertyNames(model: JsonApiModel) {
+        let attributesMetadata: any = Reflect.getMetadata('Attribute', model);
+        return Object.keys(attributesMetadata).reduce((propertyMap, attributeKey) => {
+            let serializedName = attributesMetadata[attributeKey].serializedName;
+            if (serializedName != null) {
+                propertyMap[serializedName] = attributeKey;
+            }
+            return propertyMap;
+        }, {} as { [id: string]: string});
+    }
+
+
 
 }
